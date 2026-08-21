@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Registration · User Management{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h4 mb-3 text-center">Create an account</h1>
+                    <p class="text-muted small text-center mb-4">
+                        Your account will be created immediately. A confirmation link will be e-mailed to you.
+                    </p>
+
+                    {{ form_start(registrationForm, {attr: {novalidate: 'novalidate', class: 'needs-validation'}}) }}
+
+                    <div class="mb-3">
+                        {{ form_label(registrationForm.name, 'Name', {label_attr: {class: 'form-label'}}) }}
+                        {{ form_widget(registrationForm.name, {attr: {class: 'form-control' ~ (registrationForm.name.vars.errors|length ? ' is-invalid' : '')}}) }}
+                        {% for error in registrationForm.name.vars.errors %}
+                            <div class="invalid-feedback d-block">{{ error.message }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(registrationForm.email, 'E-mail', {label_attr: {class: 'form-label'}}) }}
+                        {{ form_widget(registrationForm.email, {attr: {class: 'form-control' ~ (registrationForm.email.vars.errors|length ? ' is-invalid' : '')}}) }}
+                        {% for error in registrationForm.email.vars.errors %}
+                            <div class="invalid-feedback d-block">{{ error.message }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(registrationForm.plainPassword.first, 'Password', {label_attr: {class: 'form-label'}}) }}
+                        {{ form_widget(registrationForm.plainPassword.first, {attr: {class: 'form-control' ~ (registrationForm.plainPassword.first.vars.errors|length ? ' is-invalid' : '')}}) }}
+                        {% for error in registrationForm.plainPassword.first.vars.errors %}
+                            <div class="invalid-feedback d-block">{{ error.message }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(registrationForm.plainPassword.second, 'Confirm password', {label_attr: {class: 'form-label'}}) }}
+                        {{ form_widget(registrationForm.plainPassword.second, {attr: {class: 'form-control'}}) }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-person-plus me-1"></i> Register
+                    </button>
+                    {# IMPORTANT: no render_rest option — there are no remaining fields
+                       to render (the submit button was omitted from the form type),
+                       and form_end will close the form tag normally. #}
+                    {{ form_end(registrationForm) }}
+
+                    <hr class="my-4">
+                    <p class="text-center small mb-0">
+                        Already have an account?
+                        <a href="{{ path('app_login') }}">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

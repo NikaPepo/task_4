@@ -1,0 +1,168 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Users · User Management{% endblock %}
+
+{% block body %}
+    <div class="d-flex align-items-center mb-3">
+        <h1 class="h4 mb-0 me-auto">Users</h1>
+        <span class="text-muted small">{{ users|length }} total</span>
+    </div>
+
+    {# IMPORTANT: toolbar — appears for every request, buttons may be disabled. #}
+    <form id="users-form" method="post" class="user-toolbar" data-turbo="false">
+        {# NOTE: CSRF token — one per form, not per row. #}
+        <input type="hidden" name="_token" value="{{ csrf_token('users-toolbar') }}">
+
+        {# IMPORTANT: action buttons rendered as plain submit buttons inside the form.
+           Each carries its own data-action and posts to a different route. #}
+        <button type="submit" formaction="{{ path('app_users_block') }}"
+                class="btn btn-warning" data-action="block"
+                data-bs-toggle="tooltip" title="Block selected users (they will not be able to log in)" disabled>
+            <i class="bi bi-lock-fill me-1"></i> Block
+        </button>
+
+        <button type="submit" formaction="{{ path('app_users_unblock') }}"
+                class="btn btn-outline-success" data-action="unblock"
+                data-bs-toggle="tooltip" title="Unblock selected users" disabled>
+            <i class="bi bi-unlock-fill"></i>
+            <span class="visually-hidden">Unblock</span>
+        </button>
+
+        <button type="submit" formaction="{{ path('app_users_delete') }}"
+                class="btn btn-outline-danger" data-action="delete"
+                data-bs-toggle="tooltip" title="Delete selected users" disabled>
+            <i class="bi bi-trash-fill"></i>
+            <span class="visually-hidden">Delete</span>
+        </button>
+
+        <button type="submit" formaction="{{ path('app_users_delete_unverified') }}"
+                class="btn btn-outline-secondary" data-action="delete-unverified"
+                data-bs-toggle="tooltip" title="Delete every unverified user">
+            <i class="bi bi-person-x-fill"></i>
+            <span class="visually-hidden">Delete unverified</span>
+        </button>
+    </form>
+
+    {# IMPORTANT: the table — leftmost column is a checkbox without a label,
+       header has a single "select all" checkbox without a label. #}
+    <div class="table-responsive bg-white border rounded">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    {# NOTE: header cell intentionally contains only a checkbox, no <label>. #}
+                    <th class="cell-checkbox">
+                        <input type="checkbox" id="select-all" class="form-check-input"
+                               form="users-form" aria-label="Select all rows">
+                    </th>
+                    <th>
+                        {% set ns = sortContext.current == 'name' ? sortContext.oppositeDir : 'ASC' %}
+                        <a href="{{ path('app_users', {sort: 'name', dir: ns}) }}" class="text-decoration-none text-body">
+                            Name
+                            {% if sortContext.current == 'name' %}
+                                <i class="bi bi-caret-{{ sortContext.dir == 'ASC' ? 'up' : 'down' }}-fill small"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        {% set ns = sortContext.current == 'email' ? sortContext.oppositeDir : 'ASC' %}
+                        <a href="{{ path('app_users', {sort: 'email', dir: ns}) }}" class="text-decoration-none text-body">
+                            E-mail
+                            {% if sortContext.current == 'email' %}
+                                <i class="bi bi-caret-{{ sortContext.dir == 'ASC' ? 'up' : 'down' }}-fill small"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        {% set ns = sortContext.current == 'lastLoginAt' ? sortContext.oppositeDir : 'DESC' %}
+                        <a href="{{ path('app_users', {sort: 'lastLoginAt', dir: ns}) }}" class="text-decoration-none text-body">
+                            Last login
+                            {% if sortContext.current == 'lastLoginAt' %}
+                                <i class="bi bi-caret-{{ sortContext.dir == 'ASC' ? 'up' : 'down' }}-fill small"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        {% set ns = sortContext.current == 'status' ? sortContext.oppositeDir : 'ASC' %}
+                        <a href="{{ path('app_users', {sort: 'status', dir: ns}) }}" class="text-decoration-none text-body">
+                            Status
+                            {% if sortContext.current == 'status' %}
+                                <i class="bi bi-caret-{{ sortContext.dir == 'ASC' ? 'up' : 'down' }}-fill small"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        {% set ns = sortContext.current == 'createdAt' ? sortContext.oppositeDir : 'DESC' %}
+                        <a href="{{ path('app_users', {sort: 'createdAt', dir: ns}) }}" class="text-decoration-none text-body">
+                            Registered
+                            {% if sortContext.current == 'createdAt' %}
+                                <i class="bi bi-caret-{{ sortContext.dir == 'ASC' ? 'up' : 'down' }}-fill small"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    {# NOTE: data-uniq-id is computed via getUniqIdValue(). #}
+                    <tr data-uniq-id="{{ getUniqIdValue(user.id) }}">
+                        <td class="cell-checkbox">
+                            {# IMPORTANT: per-row checkbox without <label>. #}
+                            <input type="checkbox" name="selected[]" value="{{ user.id }}"
+                                   class="form-check-input row-checkbox"
+                                   form="users-form" aria-label="Select row {{ user.id }}">
+                        </td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.lastLoginAt %}
+                                {{ user.lastLoginAt|date('Y-m-d H:i') }}
+                            {% else %}
+                                <span class="text-muted fst-italic">never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# NOTE: status badge, coloured per UserStatus::badgeClass(). #}
+                            <span class="badge {{ user.status.badgeClass }}">{{ user.status.label }}</span>
+                        </td>
+                        <td>{{ user.createdAt|date('Y-m-d H:i') }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // IMPORTANT: enable/disable toolbar buttons based on selection state.
+        (function () {
+            const form = document.getElementById('users-form');
+            const selectAll = document.getElementById('select-all');
+            const rowBoxes = () => Array.from(document.querySelectorAll('.row-checkbox'));
+            const actionButtons = () => Array.from(form.querySelectorAll('button[data-action]'))
+                .filter(b => b.dataset.action !== 'delete-unverified'); // "delete unverified" is always enabled.
+
+            function refresh() {
+                const checked = rowBoxes().filter(cb => cb.checked).length;
+                for (const btn of actionButtons()) {
+                    btn.disabled = checked === 0;
+                }
+                selectAll.indeterminate = checked > 0 && checked < rowBoxes().length;
+                selectAll.checked = rowBoxes().length > 0 && checked === rowBoxes().length;
+                document.querySelectorAll('tbody tr').forEach(tr => tr.classList.remove('selected'));
+                if (checked > 0) {
+                    rowBoxes().filter(cb => cb.checked).forEach(cb => cb.closest('tr').classList.add('selected'));
+                }
+            }
+
+            selectAll.addEventListener('change', () => {
+                for (const cb of rowBoxes()) cb.checked = selectAll.checked;
+                refresh();
+            });
+            for (const cb of rowBoxes()) cb.addEventListener('change', refresh);
+            refresh();
+        })();
+    </script>
+{% endblock %}
