@@ -11,6 +11,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Twig\Environment;
 
 /**
  * IMPORTANT: handles the {@see SendVerificationEmail} message asynchronously
@@ -23,6 +24,7 @@ final readonly class SendVerificationEmailHandler
     public function __construct(
         private EntityManagerInterface $entityManager,
         private MailerInterface $mailer,
+        private Environment $twig,
     ) {
     }
 
@@ -48,37 +50,17 @@ final readonly class SendVerificationEmailHandler
         $fromEmail = $_SERVER['MAILER_FROM_EMAIL'] ?? $_ENV['MAILER_FROM_EMAIL'] ?? 'noreply@example.com';
         $fromName = $_SERVER['MAILER_FROM_NAME'] ?? $_ENV['MAILER_FROM_NAME'] ?? 'User Management';
 
+        $html = $this->twig->render('emails/verification.html.twig', [
+            'name' => $user->getName(),
+            'url' => $verifyUrl,
+        ]);
+
         $email = (new Email())
             ->from(new Address($fromEmail, $fromName))
             ->to($user->getEmail())
             ->subject('Confirm your e-mail address')
-            ->html($this->renderBody($user->getName(), $verifyUrl));
+            ->html($html);
 
         $this->mailer->send($email);
-    }
-
-    /**
-     * NOTE: small, deliberately boring HTML body for the verification e-mail.
-     */
-    private function renderBody(string $name, string $url): string
-    {
-        // IMPORTANT: htmlspecialchars-escape user-controlled fragments.
-        $safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-
-        return <<<HTML
-<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#222">
-<h2 style="margin-bottom:0.25em">Welcome, {$safeName}!</h2>
-<p>Please confirm your e-mail address by clicking the link below.</p>
-<p style="margin:1.5em 0">
-  <a href="{$url}" style="background:#0d6efd;color:#fff;padding:0.5em 1em;border-radius:4px;text-decoration:none">
-    Confirm e-mail
-  </a>
-</p>
-<p>If the button does not work, copy this link into your browser:</p>
-<p style="word-break:break-all;color:#555">{$url}</p>
-<p style="color:#888;font-size:0.85em">If you did not register, simply ignore this message.</p>
-</body></html>
-HTML;
     }
 }

@@ -1,3 +1,13 @@
+# IMPORTANT: NO worker, NO scheduler service in this file.
+# Async email is drained by a real cron job (not a long-running
+# process) — the host's crontab calls `docker compose exec` once a
+# minute to run messenger:consume as a short-lived subprocess.
+# On Linux host:
+#   crontab -e
+#   * * * * * cd /path/to/task_4 && docker compose exec -T app \
+#     php bin/console messenger:consume async --time-limit=50 --limit=20 \
+#     >> /var/log/messenger.log 2>&1
+
 services:
   app:
     user: "1000:1000"
@@ -19,24 +29,6 @@ services:
       - ./docker/nginx:/etc/nginx/conf.d/
     networks:
       - app
-  # IMPORTANT: replaces the old `worker` service (long-running
-  # `messenger:consume` process). Symfony 8.1 Scheduler dispatches
-  # ConsumeMessengerMessage every minute via Messenger; this loop
-  # just runs `messenger:consume async` for up to 50s/20 messages,
-  # then sleeps 5s. No permanent worker — just short subprocesses.
-  scheduler:
-    user: "1000:1000"
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-    command: sh -c "while true; do php bin/console messenger:consume async --time-limit=50 --limit=20 --memory-limit=128M; sleep 5; done"
-    volumes:
-      - '.:/var/www'
-    networks:
-      - app
-    depends_on:
-      mysql:
-        condition: service_healthy
   mysql:
     image: 'mysql/mysql-server:8.0'
     ports:
