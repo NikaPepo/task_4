@@ -10,6 +10,7 @@ use App\Message\SendVerificationEmail;
 use App\Util\IdGenerator;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
@@ -31,6 +32,7 @@ final readonly class RegistrationService
     /**
      * IMPORTANT: persists a new {@see User} with status Unverified and
      * dispatches the verification e-mail asynchronously.
+     * @throws ExceptionInterface
      */
     public function register(
         string $name,
