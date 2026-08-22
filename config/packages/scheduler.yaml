@@ -1,0 +1,5 @@
+framework:
+    # Symfony Scheduler 8.x integrates with the Messenger component.
+    # Tasks are NOT declared here — they live in src/Schedule.php and
+    # are added programmatically via Schedule::add(RecurringMessage::...).
+    scheduler: ~

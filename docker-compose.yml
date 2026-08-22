@@ -19,22 +19,21 @@ services:
       - ./docker/nginx:/etc/nginx/conf.d/
     networks:
       - app
-  worker:
+  # IMPORTANT: replaces the old `worker` service (long-running
+  # `messenger:consume` process). Symfony 8.1 Scheduler dispatches
+  # ConsumeMessengerMessage every minute via Messenger; this loop
+  # just runs `messenger:consume async` for up to 50s/20 messages,
+  # then sleeps 5s. No permanent worker — just short subprocesses.
+  scheduler:
     user: "1000:1000"
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    command: php /var/www/bin/console messenger:consume async failed -vv --time-limit=3600
+    command: sh -c "while true; do php bin/console messenger:consume async --time-limit=50 --limit=20 --memory-limit=128M; sleep 5; done"
     volumes:
       - '.:/var/www'
     networks:
       - app
-    # NOTE: wait for MySQL healthcheck to pass before starting the worker,
-    # otherwise the very first PDO connect races the database initialisation
-    # and crashes with "SQLSTATE[HY000] [2002] Connection refused".
-    # restart: unless-stopped also brings the container back if a transport
-    # error ever kills the consume command.
-    restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
