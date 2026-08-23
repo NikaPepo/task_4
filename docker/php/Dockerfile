@@ -5,17 +5,19 @@ WORKDIR /var/www
 # ── Системные пакеты: PHP-ext'и + nginx + supervisor ────────────────────
 # nginx + supervisor нужны для Render: у них один контейнер на сервис,
 # поэтому nginx и php-fpm живут вместе, а supervisor следит за обоими.
+# postgresql-dev нужен для сборки pdo_pgsql.
 RUN apk add --no-cache \
         nginx \
         supervisor \
         icu-dev \
         libzip-dev \
+        postgresql-dev \
         git \
         unzip \
         $PHPIZE_DEPS \
     && docker-php-ext-install \
         intl \
-        pdo_mysql \
+        pdo_pgsql \
         zip \
         opcache \
     && apk del $PHPIZE_DEPS
@@ -72,4 +74,7 @@ RUN { \
 
 EXPOSE 8080
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# На старте контейнера: миграции → настройка messenger-транспортов →
+# supervisord (держит nginx + php-fpm). exec заменяет процесс на supervisord,
+# чтобы он стал PID 1 и корректно обрабатывал SIGTERM.
+CMD ["sh", "-c", "php bin/console doctrine:migrations:migrate --no-interaction --env=prod && php bin/console messenger:setup-transports --env=prod && exec /usr/bin/supervisord -c /etc/supervisord.conf"]
