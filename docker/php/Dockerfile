@@ -85,7 +85,7 @@ RUN { \
         echo '        }'; \
         echo; \
         echo '        location / {'; \
-        echo '            try_files \$uri \$uri/ /index.php?\$query_string;'; \
+        echo '            try_files \$uri /index.php\$is_args\$args;'; \
         echo '            gzip_static on;'; \
         echo '        }'; \
         echo '    }'; \
