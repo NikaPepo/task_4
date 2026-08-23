@@ -48,17 +48,49 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
  && mkdir -p var/cache var/log \
  && chown -R www-data:www-data var
 
-# ── Адаптация docker/nginx/app.conf под "один контейнер" ────────────────
-# Локально nginx ходит в `app:9000` (отдельный контейнер php-fpm).
-# На Render оба процесса в одном контейнере → 127.0.0.1:9000.
-# Порт 8080 — Render умеет с ним работать, в UI выставим PORT=8080.
-COPY docker/nginx/app.conf /tmp/app.conf
-# IMPORTANT: в Alpine 3.24 пакет nginx не создаёт /etc/nginx/conf.d/ по
-# умолчанию (или удаляет его на post-install), поэтому создаём вручную.
-RUN mkdir -p /etc/nginx/conf.d \
- && sed -e 's/listen 80;/listen 8080;/' \
-        -e 's/fastcgi_pass app:9000;/fastcgi_pass 127.0.0.1:9000;/' \
-        /tmp/app.conf > /etc/nginx/conf.d/default.conf
+# ── nginx: свой конфиг (в Alpine 1.30 дефолтная структура сломалась) ──
+# IMPORTANT: Alpine nginx 1.30+ не инклюдит conf.d/*.conf в правильном
+# контексте ("server" directive is not allowed here). Чтобы не возиться
+# с дефолтами — пишем свой nginx.conf с полным server-блоком.
+# Порт 8080 — Render пробрасывает $PORT.
+# 127.0.0.1:9000 — php-fpm в том же контейнере (не отдельный "app").
+RUN { \
+        echo 'worker_processes 1;'; \
+        echo 'pid /run/nginx.pid;'; \
+        echo 'error_log /dev/stderr warn;'; \
+        echo; \
+        echo 'events { worker_connections 1024; }'; \
+        echo; \
+        echo 'http {'; \
+        echo '    include /etc/nginx/mime.types;'; \
+        echo '    default_type application/octet-stream;'; \
+        echo '    sendfile on;'; \
+        echo '    keepalive_timeout 65;'; \
+        echo '    client_max_body_size 100M;'; \
+        echo; \
+        echo '    server {'; \
+        echo '        listen 8080;'; \
+        echo '        server_name _;'; \
+        echo '        root /var/www/public;'; \
+        echo '        index index.php;'; \
+        echo; \
+        echo '        location ~ \.php$ {'; \
+        echo '            try_files \$uri =404;'; \
+        echo '            fastcgi_split_path_info ^(.+\.php)(/.+)$;'; \
+        echo '            fastcgi_pass 127.0.0.1:9000;'; \
+        echo '            fastcgi_index index.php;'; \
+        echo '            include fastcgi_params;'; \
+        echo '            fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;'; \
+        echo '            fastcgi_param PATH_INFO \$fastcgi_path_info;'; \
+        echo '        }'; \
+        echo; \
+        echo '        location / {'; \
+        echo '            try_files \$uri \$uri/ /index.php?\$query_string;'; \
+        echo '            gzip_static on;'; \
+        echo '        }'; \
+        echo '    }'; \
+        echo '}'; \
+    } > /etc/nginx/nginx.conf
 
 # ── supervisord (конфиг прямо тут, отдельного файла не плодим) ──────────
 RUN { \
