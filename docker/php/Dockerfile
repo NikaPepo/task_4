@@ -38,7 +38,14 @@ COPY . .
 # поэтому создаём минимальный файл. Реальные значения подтягиваются
 # из Render Environment (DATABASE_URL, MAILER_DSN и т.д.) — они перекрывают
 # то, что в .env.
-RUN echo 'APP_ENV=prod' > .env
+#
+# DEFAULT_URI нужен Symfony (symfony/routing) для генерации URL в CLI-контекстах.
+# Без него будет EnvNotFoundException. Реальный APP_BASE_URL приходит из
+# Render Environment и используется в web-контексте.
+RUN { \
+        echo 'APP_ENV=prod'; \
+        echo 'DEFAULT_URI=http://localhost'; \
+    } > .env
 # --no-scripts: composer install — ставим пакеты без post-install. Скрипт
 # @auto-scripts внутри composer.json дёргает `cache:clear`, который
 # требует .env файл. А .env в .gitignore и в образ не копируется — Render
