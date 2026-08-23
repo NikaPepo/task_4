@@ -33,7 +33,11 @@ ENV COMPOSER_HOME=/tmp/composer
 # Копируем ВЕСЬ проект перед composer install: symfony/flex-плагину нужны
 # config/ и bin/ во время install (он генерирует bundle.php и т.п.).
 COPY . .
-RUN composer install --no-dev --optimize-autoloader --no-interaction \
+# --no-scripts: composer install — ставим пакеты без post-install. Скрипт
+# @auto-scripts внутри composer.json дёргает `cache:clear`, который
+# требует .env файл. А .env в .gitignore и в образ не копируется — Render
+# передаёт env vars напрямую через Environment.
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction \
  && composer dump-autoload --optimize --no-dev --classmap-authoritative \
  && mkdir -p var/cache var/log \
  && chown -R www-data:www-data var
