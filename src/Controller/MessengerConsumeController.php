@@ -49,6 +49,7 @@ final class MessengerConsumeController
         $application->setAutoExit(false);
 
         $input = new ArrayInput([
+            'command'        => 'messenger:consume',
             'receivers'      => ['async'],
             '--limit'        => 20,
             '--time-limit'   => 50,
