@@ -30,10 +30,12 @@ ENV COMPOSER_HOME=/tmp/composer
 # ── Код приложения ──────────────────────────────────────────────────────
 # Локально в docker-compose код подкидывался через volume `.:/var/www`,
 # поэтому здесь COPY не было. На Render volume нет — печём код в образ.
-COPY composer.json composer.lock symfony.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+# Копируем ВЕСЬ проект перед composer install: symfony/flex-плагину нужны
+# config/ и bin/ во время install (он генерирует bundle.php и т.п.).
 COPY . .
-RUN mkdir -p var/cache var/log \
+RUN composer install --no-dev --optimize-autoloader --no-interaction \
+ && composer dump-autoload --optimize --no-dev --classmap-authoritative \
+ && mkdir -p var/cache var/log \
  && chown -R www-data:www-data var
 
 # ── Адаптация docker/nginx/app.conf под "один контейнер" ────────────────
