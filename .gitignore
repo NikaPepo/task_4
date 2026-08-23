@@ -1,8 +1,16 @@
 
-###> symfony/framework-bundle ###
+# Environment files (use .env.example as the template)
+/.env
 /.env.local
 /.env.local.php
 /.env.*.local
+/.env.dev
+/.env.test
+.env
+.env.local
+.env.*.local
+
+###> symfony/framework-bundle ###
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
