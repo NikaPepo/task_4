@@ -1,0 +1,33 @@
+# Files/folders not needed in the Docker build context.
+# Keeps the image small and the build fast.
+
+.git
+.gitignore
+.idea
+.vscode
+
+# Local environment files — never bake secrets into the image.
+.env
+.env.*
+!.env.example
+
+# Build artifacts that composer install will recreate.
+/vendor
+/var
+/public/assets
+/public/bundles
+
+# IDE / OS junk
+.DS_Store
+Thumbs.db
+
+# Tests (the runtime image doesn't need them)
+/tests
+
+# Docker meta — we're inside Docker, no recursion
+docker-compose.yml
+docker-compose.*.yml
+
+# Documentation
+README.md
+*.md
