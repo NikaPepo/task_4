@@ -11,13 +11,10 @@ RUN apk add --no-cache \
         supervisor \
         icu-dev \
         libzip-dev \
-        postgresql-dev \
-        git \
-        unzip \
         $PHPIZE_DEPS \
     && docker-php-ext-install \
         intl \
-        pdo_pgsql \
+        pdo_mysql \
         zip \
         opcache \
     && apk del $PHPIZE_DEPS

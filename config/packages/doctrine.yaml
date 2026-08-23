@@ -2,15 +2,15 @@ doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
 
-        # Render Postgres 16 (override here if Render bumps the major).
-        server_version: '16'
+        # MySQL 8.4 (Azure Database for MySQL Flexible Server)
+        server_version: '8.4'
 
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
         identity_generation_preferences:
-            Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
+            Doctrine\DBAL\Platforms\MySQLPlatform: identity
         auto_mapping: true
         mappings:
             App:
