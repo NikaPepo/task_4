@@ -129,6 +129,8 @@ RUN { \
 EXPOSE 8080
 
 # На старте контейнера: миграции → настройка messenger-транспортов →
+# chown var/ (миграции работают как root, поэтому файлы создаются
+# от root; php-fpm же работает как www-data — сбрасываем владельца) →
 # supervisord (держит nginx + php-fpm). exec заменяет процесс на supervisord,
 # чтобы он стал PID 1 и корректно обрабатывал SIGTERM.
-CMD ["sh", "-c", "php bin/console doctrine:migrations:migrate --no-interaction --env=prod && php bin/console messenger:setup-transports --env=prod && exec /usr/bin/supervisord -c /etc/supervisord.conf"]
+CMD ["sh", "-c", "php bin/console doctrine:migrations:migrate --no-interaction --env=prod && php bin/console messenger:setup-transports --env=prod && chown -R www-data:www-data var && exec /usr/bin/supervisord -c /etc/supervisord.conf"]
