@@ -2,8 +2,8 @@ doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
 
-        # Render Postgres is 18.x. Override here if Render bumps the major.
-        server_version: '18'
+        # Render Postgres 16 (override here if Render bumps the major).
+        server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
