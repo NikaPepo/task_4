@@ -75,17 +75,17 @@ RUN { \
         echo '        index index.php;'; \
         echo; \
         echo '        location ~ \.php$ {'; \
-        echo '            try_files \$uri =404;'; \
+        echo '            try_files $uri =404;'; \
         echo '            fastcgi_split_path_info ^(.+\.php)(/.+)$;'; \
         echo '            fastcgi_pass 127.0.0.1:9000;'; \
         echo '            fastcgi_index index.php;'; \
         echo '            include fastcgi_params;'; \
-        echo '            fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;'; \
-        echo '            fastcgi_param PATH_INFO \$fastcgi_path_info;'; \
+        echo '            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;'; \
+        echo '            fastcgi_param PATH_INFO $fastcgi_path_info;'; \
         echo '        }'; \
         echo; \
         echo '        location / {'; \
-        echo '            try_files \$uri /index.php\$is_args\$args;'; \
+        echo '            try_files $uri /index.php$is_args$args;'; \
         echo '            gzip_static on;'; \
         echo '        }'; \
         echo '    }'; \
