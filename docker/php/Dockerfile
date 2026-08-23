@@ -33,6 +33,12 @@ ENV COMPOSER_HOME=/tmp/composer
 # Копируем ВЕСЬ проект перед composer install: symfony/flex-плагину нужны
 # config/ и bin/ во время install (он генерирует bundle.php и т.п.).
 COPY . .
+# IMPORTANT: Symfony Runtime's bootEnv() требует физического файла .env,
+# иначе вылетает PathException. .env в .gitignore и в образ не попадает,
+# поэтому создаём минимальный файл. Реальные значения подтягиваются
+# из Render Environment (DATABASE_URL, MAILER_DSN и т.д.) — они перекрывают
+# то, что в .env.
+RUN echo 'APP_ENV=prod' > .env
 # --no-scripts: composer install — ставим пакеты без post-install. Скрипт
 # @auto-scripts внутри composer.json дёргает `cache:clear`, который
 # требует .env файл. А .env в .gitignore и в образ не копируется — Render
