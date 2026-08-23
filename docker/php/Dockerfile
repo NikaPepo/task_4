@@ -128,20 +128,11 @@ RUN { \
 
 EXPOSE 8080
 
-# ВАЖНО: миграции и messenger:setup-transports НЕ запускаются в CMD.
-# Запускай их вручную через Render Shell после каждого деплоя:
+# ВАЖНО: Render Shell доступен только на платных планах ($7+/мес),
+# поэтому на free tier миграции нужно запускать автоматически при старте.
 #
-#   cd /var/www
-#   chown -R www-data:www-data var    # на случай если предыдущие миграции
-#                                     # оставили root-owned файлы
-#   php bin/console doctrine:migrations:migrate --no-interaction --env=prod
-#   php bin/console messenger:setup-transports --env=prod
-#   chown -R www-data:www-data var    # миграции создали новые файлы от root
-#
-# Это разделяет деплой кода и миграции схемы. Можно задеплоить код,
-# проверить что приложение работает на старой схеме, потом накатить миграцию.
-#
-# CMD сейчас делает только:
-#   1. chown var/ (на случай если в var/ остались root-owned файлы от прошлых запусков)
-#   2. supervisord (запускает nginx + php-fpm)
-CMD ["sh", "-c", "chown -R www-data:www-data var && exec /usr/bin/supervisord -c /etc/supervisord.conf"]
+# На старте контейнера: миграции → setup-transports → chown var/
+# (миграции создают файлы от root; php-fpm работает как www-data — сбрасываем
+# владельца) → supervisord (держит nginx + php-fpm). exec заменяет процесс на
+# supervisord, чтобы он стал PID 1 и корректно обрабатывал SIGTERM.
+CMD ["sh", "-c", "php bin/console doctrine:migrations:migrate --no-interaction --env=prod && php bin/console messenger:setup-transports --env=prod && chown -R www-data:www-data var && exec /usr/bin/supervisord -c /etc/supervisord.conf"]
