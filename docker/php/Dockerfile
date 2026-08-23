@@ -47,7 +47,10 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 # На Render оба процесса в одном контейнере → 127.0.0.1:9000.
 # Порт 8080 — Render умеет с ним работать, в UI выставим PORT=8080.
 COPY docker/nginx/app.conf /tmp/app.conf
-RUN sed -e 's/listen 80;/listen 8080;/' \
+# IMPORTANT: в Alpine 3.24 пакет nginx не создаёт /etc/nginx/conf.d/ по
+# умолчанию (или удаляет его на post-install), поэтому создаём вручную.
+RUN mkdir -p /etc/nginx/conf.d \
+ && sed -e 's/listen 80;/listen 8080;/' \
         -e 's/fastcgi_pass app:9000;/fastcgi_pass 127.0.0.1:9000;/' \
         /tmp/app.conf > /etc/nginx/conf.d/default.conf
 
