@@ -49,12 +49,17 @@ services:
           name: task-4-web
           property: hostUrl
       - key: MAILER_FROM_EMAIL
-        value: np080401@gmail.com
+        # Render will prompt for this when applying the Blueprint.
+        # It MUST be a verified sender in your Brevo account
+        # (https://app.brevo.com/settings/senders).
+        sync: false
       - key: MAILER_FROM_NAME
         value: User Management
-      # IMPORTANT: MAILER_DSN contains the Gmail app password — never
-      # commit it. Render will ask for it when applying the Blueprint
-      # and you set it once in the Dashboard.
+      # IMPORTANT: MAILER_DSN contains your Brevo API key — never
+      # commit it. Render prompts for it once when the Blueprint is
+      # applied and stores it in the service's secret store; subsequent
+      # git-push deploys keep the existing value.
+      # Format: brevo+api://<BREVO_API_KEY>@default
       - key: MAILER_DSN
         sync: false
 
