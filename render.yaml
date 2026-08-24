@@ -64,13 +64,14 @@ services:
         sync: false
 
   # ──────────────────────────────────────────────────────────────────────────
-  # Cron job — drains the messenger queue every minute, replacing the
-  # long-running worker. Each invocation starts, runs messenger:consume
-  # for up to 50s (limit 20 messages), then exits. Render's cron
-  # handles the next-minute schedule. Also processes Symfony
-  # Scheduler's RecurringMessages (App\Schedule dispatches
-  # ConsumeMessengerMessage every minute, which arrives here on the
-  # async transport).
+  # Cron job — drains the messenger queue every minute. Each invocation
+  # starts, runs messenger:consume for up to 50s (limit 20 messages), then
+  # exits. Render's cron handles the next-minute schedule.
+  #
+  # NOTE: this is the primary consumer in production. The HTTP endpoint
+  # POST /messenger/consume (MessengerConsumeController) is a fallback for
+  # external cron services (cron-job.org, UptimeRobot, GitHub Actions) and
+  # is gated by the X-Cron-Token header.
   # ──────────────────────────────────────────────────────────────────────────
   - type: cron
     name: task-4-consume

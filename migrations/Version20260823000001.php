@@ -8,11 +8,11 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Initial schema: user table + messenger_messages table for MySQL.
+ * Initial schema: user table for MySQL.
  *
  * NOTE: user is a reserved keyword in MySQL too, so we use backticks.
- * messenger_messages is auto-created by `messenger:setup-transports`
- * but we include it here so `migrate` creates the whole schema.
+ * The messenger_messages table is created separately by
+ * `messenger:setup-transports` (run from preDeployCommand / Dockerfile CMD).
  */
 final class Version20260823000001 extends AbstractMigration
 {

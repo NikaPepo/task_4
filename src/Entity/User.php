@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * (enforced by the application) AND a database-level UNIQUE INDEX created by
  * the migration. NOTE: the database index is the source of truth — it
  * guarantees e-mail uniqueness even when many concurrent writers push data
- * into the table. See {@see Version20260820152947}.
+ * into the table. See {@see Version20260823000001}.
  */
 #[UniqueEntity(
     fields: ['email'],
