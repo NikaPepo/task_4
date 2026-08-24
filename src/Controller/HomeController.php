@@ -24,7 +24,6 @@ final class HomeController extends AbstractController
     #[Route('/', name: 'app_home', methods: ['GET'])]
     public function index(): RedirectResponse
     {
-        // Если юзер уже залогинен — кидаем в личный кабинет, иначе на форму входа
         if ($this->getUser() !== null) {
             return $this->redirectToRoute('app_users_index');
         }
